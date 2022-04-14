@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 const port = process.env.PORT || 5001;
 
 app.get('/', (req: Request, res: Response ) => {
-    res.send('Hello: World!')
+    res.send('Home work 1')
 });
 
 app.listen(port, () => {
