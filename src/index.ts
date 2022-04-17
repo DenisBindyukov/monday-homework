@@ -3,6 +3,8 @@ import {v4 as uuidv4} from 'uuid';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
+// Request<Params, ResBody, ReqBody, ReqQuery>
+
 type BloggerType = {
     id: string
     name: string
@@ -74,15 +76,52 @@ app.get('/api/bloggers', (req: Request, res: Response) => {
 });
 
 app.post('/api/bloggers', (req: Request<{}, {}, BloggerType>, res: Response) => {
+    const bloggerId = uuidv4()
+
+    if (!req.body.name.trim() || !req.body.youtubeUrl.trim()) {
+        res.send(400)
+    }
+
     const blogger = {
         ...req.body,
-        id: uuidv4()
+        id: bloggerId
     };
     bloggers.push(blogger);
     res.send(200);
 });
 
-app.get('/api/bloggers/:id', (req: Request, res: Response) => {
+app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>, res: Response) => {
+    const id = req.params.id;
+    const name = req.body.name;
+    const youtubeUrl = req.body.youtubeUrl;
+
+    if (typeof name !== 'string' || typeof youtubeUrl !== 'string') {
+        res.status(404)
+        res.send({
+            errorMessage: [
+                {
+                    message: 'incorrect values',
+                    fields: `name or youtubeUrl`
+                }
+            ],
+            resultCode: 1
+        })
+    }
+
+    if (!name.trim() || !youtubeUrl.trim()) {
+        res.status(204).send( 'no content')
+    }
+
+    const blogger = bloggers.find(el => el.id === id)
+
+    if (!blogger) {
+        res.send(404)
+    }
+    bloggers = bloggers.map((el) => el.id === id ? {...el, ...req.body} : el);
+    res.send(200);
+});
+
+app.get('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
     const id = req.params.id;
     const blogger = bloggers.find((el) => el.id === id)
 
@@ -91,10 +130,9 @@ app.get('/api/bloggers/:id', (req: Request, res: Response) => {
     } else {
         res.send(404)
     }
-
 });
 
-app.delete('/api/bloggers/:id', (req: Request, res: Response) => {
+app.delete('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
     const id = req.params.id;
     const bloggersCurrentLength = bloggers.length
     bloggers = bloggers.filter((el) => el.id !== id)
