@@ -11,6 +11,13 @@ type BloggerType = {
     youtubeUrl: string
 }
 
+type PostType = {
+    title: string
+    shortDescription: string
+    content: string
+    bloggerId: string
+}
+
 
 const firstBloggerId = uuidv4();
 const secondBloggerId = uuidv4();
@@ -18,10 +25,10 @@ const thirdBloggerId = uuidv4();
 const fourthBloggerId = uuidv4();
 
 let bloggers: BloggerType[] = [
-    {id: firstBloggerId, name: "IT-Kamasutra", youtubeUrl: "https://test1.com"},
+    {id: firstBloggerId, name: "Dimych", youtubeUrl: "https://test1.com"},
     {id: secondBloggerId, name: "UBTV", youtubeUrl: "https://test2.com"},
     {id: thirdBloggerId, name: "MININ", youtubeUrl: "https://test3.com"},
-    {id: fourthBloggerId, name: "SomeThing", youtubeUrl: "https://test4.com"}
+    {id: fourthBloggerId, name: "Igor", youtubeUrl: "https://test4.com"}
 ];
 
 const posts = [
@@ -39,7 +46,7 @@ const posts = [
         shortDescription: "HTML lesson",
         content: "HTML content",
         bloggerId: firstBloggerId,
-        bloggerName: 'Vlad'
+        bloggerName: 'UBTV'
     },
     {
         id: uuidv4(),
@@ -47,7 +54,7 @@ const posts = [
         shortDescription: "CSS lesson",
         content: "CSS content",
         bloggerId: firstBloggerId,
-        bloggerName: 'Vladilen'
+        bloggerName: 'MININ'
     },
     {
         id: uuidv4(),
@@ -90,6 +97,17 @@ app.post('/api/bloggers', (req: Request<{}, {}, BloggerType>, res: Response) => 
     res.send(200);
 });
 
+app.get('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
+    const id = req.params.id;
+    const blogger = bloggers.find((el) => el.id === id)
+
+    if (blogger) {
+        res.send(blogger)
+    } else {
+        res.send(404)
+    }
+});
+
 app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>, res: Response) => {
     const id = req.params.id;
     const name = req.body.name;
@@ -109,7 +127,7 @@ app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>,
     }
 
     if (!name.trim() || !youtubeUrl.trim()) {
-        res.status(204).send( 'no content')
+        res.status(204).send('no content')
     }
 
     const blogger = bloggers.find(el => el.id === id)
@@ -119,17 +137,6 @@ app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>,
     }
     bloggers = bloggers.map((el) => el.id === id ? {...el, ...req.body} : el);
     res.send(200);
-});
-
-app.get('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
-    const id = req.params.id;
-    const blogger = bloggers.find((el) => el.id === id)
-
-    if (blogger) {
-        res.send(blogger)
-    } else {
-        res.send(404)
-    }
 });
 
 app.delete('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
@@ -144,6 +151,32 @@ app.delete('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) =>
     }
 
 });
+
+app.get('/api/posts', (req: Request, res: Response) => {
+    res.send(posts)
+});
+
+app.post('/api/posts', (req: Request<{}, {}, PostType>, res: Response) => {
+    const post = {...req.body}
+    // const title = req.body.title;
+    // const shortDescription = req.body.shortDescription;
+    // const content = req.body.content;
+    // const bloggerId = req.body.bloggerId;
+
+    for (let prop in post) {
+        // @ts-ignore
+        if (typeof post[prop] !== 'string') {
+            res.send(`${prop} Invalid value`)
+            break
+        }
+        // @ts-ignore
+        if (!post[prop].trim()) {
+            res.send(`${prop} is required`)
+            break
+        }
+    }
+});
+
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
