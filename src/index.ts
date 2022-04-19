@@ -31,7 +31,7 @@ let bloggers: BloggerType[] = [
     {id: fourthBloggerId, name: "Igor", youtubeUrl: "https://test4.com"}
 ];
 
-const posts = [
+let posts = [
     {
         id: uuidv4(),
         title: "React",
@@ -45,7 +45,7 @@ const posts = [
         title: "HTML",
         shortDescription: "HTML lesson",
         content: "HTML content",
-        bloggerId: firstBloggerId,
+        bloggerId: secondBloggerId,
         bloggerName: 'UBTV'
     },
     {
@@ -53,7 +53,7 @@ const posts = [
         title: "CSS",
         shortDescription: "CSS lesson",
         content: "CSS content",
-        bloggerId: firstBloggerId,
+        bloggerId: thirdBloggerId,
         bloggerName: 'MININ'
     },
     {
@@ -61,7 +61,7 @@ const posts = [
         title: "Redux",
         shortDescription: "Redux lesson",
         content: "Redux content",
-        bloggerId: firstBloggerId,
+        bloggerId: fourthBloggerId,
         bloggerName: 'Igor'
     },
 
@@ -86,7 +86,7 @@ app.post('/api/bloggers', (req: Request<{}, {}, BloggerType>, res: Response) => 
     const bloggerId = uuidv4()
 
     if (!req.body.name.trim() || !req.body.youtubeUrl.trim()) {
-        res.send(400)
+        res.send(400);
     }
 
     const blogger = {
@@ -99,12 +99,12 @@ app.post('/api/bloggers', (req: Request<{}, {}, BloggerType>, res: Response) => 
 
 app.get('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
     const id = req.params.id;
-    const blogger = bloggers.find((el) => el.id === id)
+    const blogger = bloggers.find((el) => el.id === id);
 
     if (blogger) {
-        res.send(blogger)
+        res.send(blogger);
     } else {
-        res.send(404)
+        res.send(404);
     }
 });
 
@@ -114,7 +114,7 @@ app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>,
     const youtubeUrl = req.body.youtubeUrl;
 
     if (typeof name !== 'string' || typeof youtubeUrl !== 'string') {
-        res.status(404)
+        res.status(404).send();
         res.send({
             errorMessage: [
                 {
@@ -125,15 +125,16 @@ app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>,
             resultCode: 1
         })
     }
+    ;
 
     if (!name.trim() || !youtubeUrl.trim()) {
-        res.status(204).send('no content')
+        res.status(204).send('no content');
     }
 
-    const blogger = bloggers.find(el => el.id === id)
+    const blogger = bloggers.find(el => el.id === id);
 
     if (!blogger) {
-        res.send(404)
+        res.send(404);
     }
     bloggers = bloggers.map((el) => el.id === id ? {...el, ...req.body} : el);
     res.send(200);
@@ -141,43 +142,139 @@ app.put('/api/bloggers/:id', (req: Request<{ id: string }, {}, BloggerType, {}>,
 
 app.delete('/api/bloggers/:id', (req: Request<{ id: string }>, res: Response) => {
     const id = req.params.id;
-    const bloggersCurrentLength = bloggers.length
-    bloggers = bloggers.filter((el) => el.id !== id)
+    const bloggersCurrentLength = bloggers.length;
+    bloggers = bloggers.filter((el) => el.id !== id);
 
     if (bloggers.length < bloggersCurrentLength) {
-        res.send(204)
+        res.send(204);
     } else {
-        res.send(404)
+        res.send(404);
     }
+    ;
 
 });
 
 app.get('/api/posts', (req: Request, res: Response) => {
-    res.send(posts)
+    res.send(posts);
 });
 
 app.post('/api/posts', (req: Request<{}, {}, PostType>, res: Response) => {
-    const post = {...req.body}
-    // const title = req.body.title;
-    // const shortDescription = req.body.shortDescription;
-    // const content = req.body.content;
-    // const bloggerId = req.body.bloggerId;
+    const post = {...req.body};
 
     for (let prop in post) {
         // @ts-ignore
         if (typeof post[prop] !== 'string') {
-            res.send(`${prop} Invalid value`)
+            res.status(400).send({
+                errorsMessages: [
+                    {
+                        message: ` must be string`,
+                        // @ts-ignore
+                        field: `${post[prop]}`,
+                    }
+                ],
+                resultCode: 0
+            })
             break
         }
+        ;
         // @ts-ignore
         if (!post[prop].trim()) {
-            res.send(`${prop} is required`)
+            res.send({
+                errorsMessages: [
+                    {
+                        message: ` is required`,
+                        // @ts-ignore
+                        field: `${post[prop]}`,
+                    }
+                ],
+                resultCode: 0
+            })
             break
         }
+        ;
+
+        const blogger = bloggers.find(el => el.id === post.bloggerId);
+        const newPost = {...post, id: uuidv4(), bloggerName: blogger!.name}
+        posts.push(newPost);
+
+        res.status(201).send(newPost);
     }
+});
+
+app.put('/api/posts', (req: Request<{}, {}, PostType>, res: Response) => {
+    const post = {...req.body};
+
+    for (let prop in post) {
+        // @ts-ignore
+        if (typeof post[prop] !== 'string') {
+            res.status(400).send({
+                errorsMessages: [
+                    {
+                        message: ` must be string`,
+                        // @ts-ignore
+                        field: `${post[prop]}`,
+                    }
+                ],
+                resultCode: 0
+            })
+            break
+        }
+
+        // @ts-ignore
+        if (!post[prop].trim()) {
+            res.send({
+                errorsMessages: [
+                    {
+                        message: ` is required`,
+                        // @ts-ignore
+                        field: `${post[prop]}`,
+                    }
+                ],
+                resultCode: 0
+            })
+            break
+        }
+
+        posts = posts.map(el => el.bloggerId === post.bloggerId ? {...el, ...post} : el);
+        const updatedPost = posts.find(el => el.bloggerId === post.bloggerId);
+
+        if (!updatedPost) {
+            res.status(404).send()
+        }
+
+        res.status(201).send(updatedPost);
+    }
+});
+
+app.get('/api/posts/:id', (req: Request<{ id: string }>, res: Response) => {
+    const id = req.params.id;
+    const post = posts.find((el) => el.id === id);
+
+    if (post) {
+        res.send(post);
+    } else {
+        res.send(404);
+    }
+});
+
+app.delete('/api/posts/:id', (req: Request<{ id: string }>, res: Response) => {
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(204).send()
+    }
+
+    const post = posts.find(el => el.id === id);
+    if (!post) {
+        res.status(404).send()
+        return
+    }
+
+    posts = posts.filter((el) => el.id !== id);
+    res.send(200);
 });
 
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+    console.log(`Example app listening on port ${port}`);
 });
