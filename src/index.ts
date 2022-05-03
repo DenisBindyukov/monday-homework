@@ -75,7 +75,7 @@ app.use(bodyParser.json());
 const port = process.env.PORT || 5001;
 
 app.get('/', (req: Request, res: Response) => {
-    res.send(posts);
+    res.status(200).send(posts);
 });
 
 app.get('/api/bloggers', (req: Request, res: Response) => {
